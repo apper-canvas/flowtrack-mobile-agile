@@ -11,7 +11,7 @@ export const taskService = {
         throw new Error("ApperClient not initialized")
       }
 
-      const params = {
+const params = {
         fields: [
           {"field": {"Name": "Id"}},
           {"field": {"Name": "Name"}},
@@ -20,7 +20,8 @@ export const taskService = {
           {"field": {"Name": "status_c"}},
           {"field": {"Name": "completed_at_c"}},
           {"field": {"Name": "CreatedOn"}},
-          {"field": {"Name": "Tags"}}
+          {"field": {"Name": "Tags"}},
+          {"field": {"Name": "file_attachments_c"}}
         ],
         orderBy: [{"fieldName": "CreatedOn", "sorttype": "DESC"}]
       }
@@ -49,14 +50,15 @@ export const taskService = {
 
       const params = {
         fields: [
-          {"field": {"Name": "Id"}},
+{"field": {"Name": "Id"}},
           {"field": {"Name": "Name"}},
           {"field": {"Name": "description_c"}},
           {"field": {"Name": "priority_c"}},
           {"field": {"Name": "status_c"}},
           {"field": {"Name": "completed_at_c"}},
           {"field": {"Name": "CreatedOn"}},
-          {"field": {"Name": "Tags"}}
+          {"field": {"Name": "Tags"}},
+          {"field": {"Name": "file_attachments_c"}}
         ]
       }
 
@@ -75,7 +77,7 @@ export const taskService = {
     }
   },
 
-  async create(taskData) {
+async create(taskData) {
     try {
       const apperClient = getApperClient()
       if (!apperClient) {
@@ -114,7 +116,31 @@ export const taskService = {
           })
         }
         
-        return successful.length > 0 ? successful[0].data : null
+        const createdTask = successful.length > 0 ? successful[0].data : null
+        
+        // Handle file attachments if provided
+        if (createdTask && taskData.files && taskData.files.length > 0) {
+          const { fileService } = await import('@/services/api/fileService')
+          
+          for (const file of taskData.files) {
+            try {
+              await fileService.create({
+                Name: file.name || "Uploaded File",
+                file_name_c: file.name,
+                file_size_c: file.size || 0,
+                upload_date_c: new Date().toISOString(),
+                task_c: createdTask.Id,
+                file_c: file,
+                Tags: ""
+              })
+            } catch (fileError) {
+              console.error("Error creating file attachment:", fileError)
+              // Don't fail task creation if file attachment fails
+            }
+          }
+        }
+        
+        return createdTask
       }
       
       return null
