@@ -1,13 +1,15 @@
 import { Outlet } from "react-router-dom";
-import { useAuth } from "@/layouts/Root";
 import { useSelector } from "react-redux";
 import React from "react";
 import ApperIcon from "@/components/ApperIcon";
 import Button from "@/components/atoms/Button";
+import { useAuth } from "@/layouts/Root";
+
 
 function Layout() {
   const { logout } = useAuth();
   const { user, isAuthenticated } = useSelector(state => state.user);
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {isAuthenticated && (
@@ -39,6 +41,7 @@ function Layout() {
       )}
       <Outlet />
     </div>
+  );
 }
 
-export default Layout
+export default Layout;
